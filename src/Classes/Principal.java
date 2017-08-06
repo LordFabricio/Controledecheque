@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  *
@@ -29,8 +30,44 @@ public class Principal {
         r = new Random();
     }
 
+    private void autocheque() {
+        int ncheque;
+        int n = 0;
+        int testeenum;
+        LocalDate datec;
+        double vcheque;
+        String statsc;
+        Cheque chk = new Cheque();
+        ncheque = 100000 + r.nextInt(899999);
+        vcheque = vrandom();
+        datec = data();
+        testeenum = renum();
+        if (testeenum == 1){
+            statsc = String.valueOf(Statusenum.Aberto);
+        } else if (testeenum == 2 && caixa >= vcheque){
+            statsc = String.valueOf(Statusenum.Compensado);
+            caixa = caixa - vcheque;
+        } else if (testeenum == 3 && caixa < vcheque){
+            statsc = String.valueOf(Statusenum.SemFundo);
+        } else {
+            statsc = String.valueOf(Statusenum.Aberto);
+        }
+        chk.cadCheque(ncheque, vcheque, datec, statsc);
+        cheques.add(chk);
+    }
+
     public void start() {
         int op;
+        int auto10 = 0;
+        System.out.println("O Sistema Criou 10 Cheques Aleatórios");
+        do {
+            auto10++;
+            if (auto10 < 11){
+                autocheque();
+            } else {
+                break;
+            }
+        } while (true);
         do {
             System.out.println("= Controle de Cheques =");
             System.out.println("Passar Cheque.....: (1)");
@@ -50,7 +87,7 @@ public class Principal {
                     listCHK();
                     continue;
                 case 3:
-                    System.out.println("======Sustar Cheque======");
+                    System.out.println("====Compensar Cheque====");
                     System.out.println();
                     listCHK();
                     double saldo;
@@ -64,10 +101,10 @@ public class Principal {
                         saldo = saldo - chk.getVcheque();
                         if (saldo < 0) {
                             System.out.println("Saldo Indisponivel");
-                        } else if (chk.getStatsc().equals("Sustado")) {
-                            System.out.println("Cheque Já foi Sustado");
+                        } else if (chk.getStatsc().equals("Compensado")) {
+                            System.out.println("Cheque Já foi Compensado");
                         } else {
-                            chk.setStatsc("Sustado");
+                            chk.setStatsc("Compensado");
                             System.out.printf("Nº cheque.: %s - Valor Cheque.: R$ %.2f - Data.: %s - Situação.: %s\n", chk.getNcheque(), chk.getVcheque(), chk.getDatec(), chk.getStatsc());
                             System.out.println("Cheque Sustado");
                             caixa = saldo;
@@ -75,7 +112,7 @@ public class Principal {
                         ent.nextLine();
                         System.out.print("Continuar Sustando ? (1)sim / (2)não ");
                         sair = ent.nextInt();
-                        if (sair == 1){
+                        if (sair == 1) {
                             continue;
                         } else {
                             break;
@@ -98,15 +135,16 @@ public class Principal {
 
     public void cadCHK() {
         int ncheque;
-        LocalDate datec;
+        String datec;
+        LocalDate convert;
         double vcheque;
         String statsc;
         Cheque chk = new Cheque();
         System.out.println("====Passar Cheque====");
         ent.nextLine();
         System.out.println();
-        ncheque = 100000 + r.nextInt(899999);
-        System.out.printf("Numero do Cheque.: %s\n", ncheque);
+        System.out.print("Numero do Cheque.......: ");
+        ncheque = ent.nextInt();
         if (insertCad(ncheque)) {
             System.out.println();
             System.out.println("Cheque Já Cadastrado");
@@ -115,11 +153,12 @@ public class Principal {
         } else {
             System.out.print("Valor do Cheque.......: ");
             vcheque = ent.nextDouble();
-            datec = LocalDate.now();
-            System.out.printf("Data de Lançamento..: %s\n", datec);
-            statsc = "Ncompensado";
+            System.out.println("Data do Cheque......: ");
+            datec = ent.nextLine();
+            convert = LocalDate.parse(datec);
+            statsc = String.valueOf(Statusenum.Aberto);
             System.out.printf("Situação..: %s\n", statsc);
-            chk.cadCheque(ncheque, vcheque, datec, statsc);
+            chk.cadCheque(ncheque, vcheque, convert, statsc);
             System.out.println();
             System.out.println("Cheque Cadastrado");
             cheques.add(chk);
@@ -137,15 +176,54 @@ public class Principal {
     }
 
     public void listCHK() {
+        double comp = 0.00;
+        double aberto = 0.00;
+        double semf = 0.00;
         if (cheques.isEmpty()) {
             System.out.println("Nenhum Cheque Cadastros");
         } else {
             int index = 1;
             for (Cheque chk : cheques) {
                 System.out.printf("[%d] Nº Cheque.: %s - Valor.: R$ %.2f - Data.: %s - Situação.: %s\n", index, chk.getNcheque(), chk.getVcheque(), chk.getDatec(), chk.getStatsc());
+                if (chk.getStatsc() == "Aberto"){
+                    aberto = aberto + chk.getVcheque();
+                } else if (chk.getStatsc() == "Compensado"){
+                    comp = comp + chk.getVcheque();
+                } else if (chk.getStatsc() == "SemFundo"){
+                    semf = semf + chk.getVcheque();
+                }
                 index++;
             }
             System.out.println();
+            System.out.printf("Cheques em Aberto...: R$ %.2f\n"
+                            + "Cheques Compensados.: R$ %.2f\n"
+                            + "Cheques Sem Fundo...: R$ %.2f\n",aberto ,comp, semf);
+            System.out.println();
         }
+    }
+
+    public static LocalDate data() {
+        LocalDate data;
+        long minDay = LocalDate.of(2017, 1, 1).toEpochDay();
+        long maxDay = LocalDate.of(2017, 12, 31).toEpochDay();
+        long randomDay = ThreadLocalRandom.current().nextLong(minDay, maxDay);
+        LocalDate randomDate = LocalDate.ofEpochDay(randomDay);
+        data = randomDate;
+        return data;
+    }
+
+    public static double vrandom() {
+        double vrandom;
+        double inicio = 100;
+        double fim = 2000;
+        double random = new Random().nextDouble();
+        double result = inicio + (random * (fim - inicio));
+        vrandom = result;
+        return vrandom;
+    }
+    
+    public int renum(){
+        int renum = 1+r.nextInt(2);
+        return renum;
     }
 }

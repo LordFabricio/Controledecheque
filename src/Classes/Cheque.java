@@ -17,7 +17,6 @@ public class Cheque {
     private LocalDate datec;
     private double vcheque;
     private String statsc;
-    enum comp {Compensado, Ncompensado};
 
     public void cadCheque(int ncheque, double vcheque, LocalDate datec, String statsc) {
         setNcheque(ncheque);
@@ -86,6 +85,4 @@ public class Cheque {
     public String toString() {
         return "Cheque{" + "ncheque=" + ncheque + ", datec=" + datec + ", vcheque=" + vcheque + ", statsc=" + statsc + '}';
     }
-    
-    
 }
