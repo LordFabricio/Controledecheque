@@ -6,6 +6,7 @@
 package Classes;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -22,18 +23,19 @@ public class Principal {
     private double caixa;
     private List<Cheque> cheques;
     private Random r;
+    private DateTimeFormatter dataformat;
 
     public Principal() {
         cheques = new ArrayList<>();
         ent = new Scanner(System.in);
         caixa = 10000.00;
         r = new Random();
+        dataformat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     }
 
     private void autocheque() {
         int ncheque;
         int n = 0;
-        int testeenum;
         LocalDate datec;
         double vcheque;
         String statsc;
@@ -41,16 +43,11 @@ public class Principal {
         ncheque = 100000 + r.nextInt(899999);
         vcheque = vrandom();
         datec = data();
-        testeenum = renum();
-        if (testeenum == 1){
-            statsc = String.valueOf(Statusenum.Aberto);
-        } else if (testeenum == 2 && caixa >= vcheque){
-            statsc = String.valueOf(Statusenum.Compensado);
+        statsc = renum();
+        if (statsc.equalsIgnoreCase("Compensado") && caixa > vcheque) {
             caixa = caixa - vcheque;
-        } else if (testeenum == 3 && caixa < vcheque){
-            statsc = String.valueOf(Statusenum.SemFundo);
-        } else {
-            statsc = String.valueOf(Statusenum.Aberto);
+        } else if (caixa < vcheque) {
+            statsc = "SemFundo";
         }
         chk.cadCheque(ncheque, vcheque, datec, statsc);
         cheques.add(chk);
@@ -62,20 +59,21 @@ public class Principal {
         System.out.println("O Sistema Criou 10 Cheques Aleatórios");
         do {
             auto10++;
-            if (auto10 < 11){
+            if (auto10 < 11) {
                 autocheque();
             } else {
                 break;
             }
         } while (true);
         do {
-            System.out.println("= Controle de Cheques =");
-            System.out.println("Passar Cheque.....: (1)");
-            System.out.println("Listar Cheques....: (2)");
-            System.out.println("Sustar Cheques....: (3)");
-            System.out.println("Verificar Caixa...: (4)");
-            System.out.println("Finalizar.........: (5)");
-            System.out.println("========Opções=========");
+            System.out.println("== Controle de Cheques ===");
+            System.out.println("Passar Cheque........: (1)");
+            System.out.println("Listar Cheques.......: (2)");
+            System.out.println("Cheques por Situação.: (3)");
+            System.out.println("Compensar Cheques....: (4)");
+            System.out.println("Verificar Caixa......: (5)");
+            System.out.println("Finalizar............: (6)");
+            System.out.println("========= Opções =========");
             System.out.println();
             System.out.print("Escolha a opção...: ");
             op = ent.nextInt();
@@ -87,6 +85,9 @@ public class Principal {
                     listCHK();
                     continue;
                 case 3:
+                    listCHKS();
+                    continue;
+                case 4:
                     System.out.println("====Compensar Cheque====");
                     System.out.println();
                     listCHK();
@@ -101,12 +102,13 @@ public class Principal {
                         saldo = saldo - chk.getVcheque();
                         if (saldo < 0) {
                             System.out.println("Saldo Indisponivel");
+                            chk.setStatsc("SemFundo");
                         } else if (chk.getStatsc().equals("Compensado")) {
                             System.out.println("Cheque Já foi Compensado");
                         } else {
                             chk.setStatsc("Compensado");
                             System.out.printf("Nº cheque.: %s - Valor Cheque.: R$ %.2f - Data.: %s - Situação.: %s\n", chk.getNcheque(), chk.getVcheque(), chk.getDatec(), chk.getStatsc());
-                            System.out.println("Cheque Sustado");
+                            System.out.println("Cheque Compensado");
                             caixa = saldo;
                         }
                         ent.nextLine();
@@ -119,18 +121,18 @@ public class Principal {
                         }
                     } while (sair != 2);
                     continue;
-                case 4:
+                case 5:
                     System.out.println();
                     System.out.printf("Saldo da Conta.: R$ %.2f\n", caixa);
                     System.out.println();
                     continue;
-                case 5:
+                case 6:
                     break;
                 default:
                     System.out.println("Opção Inválida");
             }
 
-        } while (op != 5);
+        } while (op != 6);
     }
 
     public void cadCHK() {
@@ -153,10 +155,16 @@ public class Principal {
         } else {
             System.out.print("Valor do Cheque.......: ");
             vcheque = ent.nextDouble();
-            System.out.println("Data do Cheque......: ");
+            ent.nextLine();
+            System.out.print("Data do Cheque......: ");
             datec = ent.nextLine();
-            convert = LocalDate.parse(datec);
-            statsc = String.valueOf(Statusenum.Aberto);
+            convert = LocalDate.parse(datec, dataformat);
+            statsc = renum();
+            if (statsc.equalsIgnoreCase("Compensado") && caixa > vcheque) {
+                caixa = caixa - vcheque;
+            } else if (caixa < vcheque) {
+                statsc = "SemFundo";
+            }
             System.out.printf("Situação..: %s\n", statsc);
             chk.cadCheque(ncheque, vcheque, convert, statsc);
             System.out.println();
@@ -179,26 +187,82 @@ public class Principal {
         double comp = 0.00;
         double aberto = 0.00;
         double semf = 0.00;
+        String formatadata;
         if (cheques.isEmpty()) {
             System.out.println("Nenhum Cheque Cadastros");
         } else {
             int index = 1;
             for (Cheque chk : cheques) {
-                System.out.printf("[%d] Nº Cheque.: %s - Valor.: R$ %.2f - Data.: %s - Situação.: %s\n", index, chk.getNcheque(), chk.getVcheque(), chk.getDatec(), chk.getStatsc());
-                if (chk.getStatsc() == "Aberto"){
+                formatadata = String.valueOf(chk.getDatec().format(dataformat));
+                System.out.printf("[%d] Nº Cheque.: %s - Valor.: R$ %.2f - Data.: %s - Situação.: %s\n", index, chk.getNcheque(), chk.getVcheque(), formatadata, chk.getStatsc());
+                if (chk.getStatsc().equalsIgnoreCase("Aberto")) {
                     aberto = aberto + chk.getVcheque();
-                } else if (chk.getStatsc() == "Compensado"){
+                } else if (chk.getStatsc().equalsIgnoreCase("Compensado")) {
                     comp = comp + chk.getVcheque();
-                } else if (chk.getStatsc() == "SemFundo"){
+                } else if (chk.getStatsc().equalsIgnoreCase("SemFundo")) {
                     semf = semf + chk.getVcheque();
                 }
                 index++;
             }
             System.out.println();
-            System.out.printf("Cheques em Aberto...: R$ %.2f\n"
-                            + "Cheques Compensados.: R$ %.2f\n"
-                            + "Cheques Sem Fundo...: R$ %.2f\n",aberto ,comp, semf);
+            System.out.printf("== Cheques em Aberto...: R$ %.2f - "
+                    + "Cheques Compensados.: R$ %.2f - "
+                    + "Cheques Sem Fundo...: R$ %.2f ==\n", aberto, comp, semf);
             System.out.println();
+        }
+    }
+
+    public void listCHKS() {
+        double comp = 0.00;
+        double aberto = 0.00;
+        double semf = 0.00;
+        String formatadata;
+        int status = 0;
+        if (cheques.isEmpty()) {
+            System.out.println("Nenhum Cheque Cadastros");
+        } else {
+            System.out.print("Escolha uma Opção (1)Aberto - (2)Compensado - (3)Sem Fundo .: ");
+            status = ent.nextInt();
+            if (status == 1) {
+                int index = 1;
+                for (Cheque chk : cheques) {
+                    formatadata = String.valueOf(chk.getDatec().format(dataformat));
+                    if (chk.getStatsc().equalsIgnoreCase("Aberto")) {
+                        System.out.printf("[%d] Nº Cheque.: %s - Valor.: R$ %.2f - Data.: %s - Situação.: %s\n", index, chk.getNcheque(), chk.getVcheque(), formatadata, chk.getStatsc());
+                        aberto = aberto + chk.getVcheque();
+                    }
+                    index++;
+                }
+                System.out.println();
+                System.out.printf("== Cheques em Aberto...: R$ %.2f ==\n", aberto);
+                System.out.println();
+            } else if (status == 2) {
+                int index = 1;
+                for (Cheque chk : cheques) {
+                    formatadata = String.valueOf(chk.getDatec().format(dataformat));
+                    if (chk.getStatsc().equalsIgnoreCase("Compensado")) {
+                        System.out.printf("[%d] Nº Cheque.: %s - Valor.: R$ %.2f - Data.: %s - Situação.: %s\n", index, chk.getNcheque(), chk.getVcheque(), formatadata, chk.getStatsc());
+                        comp = comp + chk.getVcheque();
+                    }
+                    index++;
+                }
+                System.out.println();
+                System.out.printf("== Cheques Compensados.: R$ %.2f ==\n", comp);
+                System.out.println();
+            } else if (status == 3) {
+                int index = 1;
+                for (Cheque chk : cheques) {
+                    formatadata = String.valueOf(chk.getDatec().format(dataformat));
+                    if (chk.getStatsc().equalsIgnoreCase("SemFundo")) {
+                        System.out.printf("[%d] Nº Cheque.: %s - Valor.: R$ %.2f - Data.: %s - Situação.: %s\n", index, chk.getNcheque(), chk.getVcheque(), formatadata, chk.getStatsc());
+                        semf = semf + chk.getVcheque();
+                    }
+                    index++;
+                }
+                System.out.println();
+                System.out.printf("== Cheques Sem Fundo..: R$ %.2f ==\n", semf);
+                System.out.println();
+            }
         }
     }
 
@@ -221,9 +285,24 @@ public class Principal {
         vrandom = result;
         return vrandom;
     }
-    
-    public int renum(){
-        int renum = 1+r.nextInt(2);
+
+    public String renum() {
+        int tenum = 1 + r.nextInt(2);
+        String renum;
+        switch (tenum) {
+            case 1:
+                renum = String.valueOf(Statusenum.Aberto);
+                break;
+            case 2:
+                renum = String.valueOf(Statusenum.Compensado);
+                break;
+            case 3:
+                renum = String.valueOf(Statusenum.SemFundo);
+                break;
+            default:
+                renum = String.valueOf(Statusenum.Aberto);
+                break;
+        }
         return renum;
     }
 }
