@@ -11,6 +11,7 @@ package Classes;
  */
 public class Start {
     public static void main(String[] args) {
-        new Principal().start();
+        //new Principal().start();
+        new Terminal().setVisible(true);
     }
 }
