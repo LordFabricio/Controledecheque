@@ -9,12 +9,12 @@ import java.time.LocalDate;
 
 /**
  *
- * @author LordFabricio
+ * @author ViniciusVonAhn
  */
 public class Cheque {
     
     private int ncheque;
-    private LocalDate datec;
+    private LocalDate datec; //teste
     private double vcheque;
     private String statsc;
 
