@@ -129,7 +129,7 @@ public class Principal {
                 case 6:
                     break;
                 default:
-                    System.out.println("Opção Inválida");
+                    System.out.println("Opção Inválid");
             }
 
         } while (op != 6);
