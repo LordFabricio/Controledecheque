@@ -16,9 +16,9 @@ public class Cheque {
     private int ncheque;
     private LocalDate datec; //teste
     private double vcheque;
-    private String statsc;
+    private Statusenum statsc;
 
-    public void cadCheque(int ncheque, double vcheque, LocalDate datec, String statsc) {
+    public void cadCheque(int ncheque, double vcheque, LocalDate datec, Statusenum statsc) {
         setNcheque(ncheque);
         setVcheque(vcheque);
         setDatec(datec);
@@ -49,7 +49,7 @@ public class Cheque {
     /**
      * @return the statsc
      */
-    public String getStatsc() {
+    public Statusenum getStatsc() {
         return statsc;
     }
 
@@ -77,7 +77,7 @@ public class Cheque {
     /**
      * @param statsc the statsc to set
      */
-    public void setStatsc(String statsc) {
+    public void setStatsc(Statusenum statsc) {
         this.statsc = statsc;
     }
 

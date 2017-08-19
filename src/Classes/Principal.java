@@ -102,11 +102,11 @@ public class Principal {
                         saldo = saldo - chk.getVcheque();
                         if (saldo < 0) {
                             System.out.println("Saldo Indisponivel");
-                            chk.setStatsc("SemFundo");
+                            chk.setStatsc(Statusenum.SemFundo);
                         } else if (chk.getStatsc().equals("Compensado")) {
                             System.out.println("Cheque Já foi Compensado");
                         } else {
-                            chk.setStatsc("Compensado");
+                            chk.setStatsc(Statusenum.Compensado);
                             System.out.printf("Nº cheque.: %s - Valor Cheque.: R$ %.2f - Data.: %s - Situação.: %s\n", chk.getNcheque(), chk.getVcheque(), chk.getDatec(), chk.getStatsc());
                             System.out.println("Cheque Compensado");
                             caixa = saldo;
@@ -140,7 +140,7 @@ public class Principal {
         String datec;
         LocalDate convert;
         double vcheque;
-        String statsc;
+        Statusenum statsc;
         Cheque chk = new Cheque();
         System.out.println("====Passar Cheque====");
         ent.nextLine();
@@ -160,10 +160,10 @@ public class Principal {
             datec = ent.nextLine();
             convert = LocalDate.parse(datec, dataformat);
             statsc = renum();
-            if (statsc.equalsIgnoreCase("Compensado") && caixa > vcheque) {
+            if (statsc.equalsIgnoreCase() && caixa > vcheque) {
                 caixa = caixa - vcheque;
             } else if (caixa < vcheque) {
-                statsc = "SemFundo";
+                statsc = Statusenum.SemFundo;
             }
             System.out.printf("Situação..: %s\n", statsc);
             chk.cadCheque(ncheque, vcheque, convert, statsc);
